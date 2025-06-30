@@ -24,3 +24,7 @@ func (s *LogProdukService) GetLogProdukByID(id int) (*domain.LogProduk, error) {
 func (s *LogProdukService) GetAllLogProduk() ([]domain.LogProduk, error) {
 	return s.repo.FindAll()
 }
+
+func (s *LogProdukService) GetAllLogProdukPaginatedFiltered(page, limit int, jenis, keterangan string, idProduk int) ([]domain.LogProduk, int64, error) {
+	return s.repo.FindAllPaginatedFiltered(page, limit, jenis, keterangan, idProduk)
+}

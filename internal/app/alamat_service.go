@@ -41,3 +41,7 @@ func (s *AlamatService) GetAlamatByID(userID int, id int) (*domain.Alamat, error
 func (s *AlamatService) GetAllAlamatByUser(userID int) ([]domain.Alamat, error) {
 	return s.repo.FindAllByUser(userID)
 }
+
+func (s *AlamatService) GetAllAlamatByUserPaginatedFiltered(userID, page, limit int, nama, judul string) ([]domain.Alamat, int64, error) {
+	return s.repo.FindAllByUserPaginatedFiltered(userID, page, limit, nama, judul)
+}

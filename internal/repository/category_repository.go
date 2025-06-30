@@ -36,3 +36,23 @@ func (r *CategoryRepository) FindAll() ([]domain.Category, error) {
 	err := r.db.Find(&cats).Error
 	return cats, err
 }
+
+func (r *CategoryRepository) FindAllPaginatedFiltered(page, limit int, nama string) ([]domain.Category, int64, error) {
+	var cats []domain.Category
+	var total int64
+
+	db := r.db.Model(&domain.Category{})
+
+	if nama != "" {
+		db = db.Where("nama_category LIKE ?", "%"+nama+"%")
+	}
+
+	// Hitung total sesuai filter
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := db.Limit(limit).Offset(offset).Find(&cats).Error
+	return cats, total, err
+}

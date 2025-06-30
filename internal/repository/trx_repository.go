@@ -45,3 +45,34 @@ func (r *TrxRepository) FindDetailsByTrx(trxID int) ([]domain.DetailTrx, error) 
 	err := r.db.Where("id_trx = ?", trxID).Find(&details).Error
 	return details, err
 }
+
+func (r *TrxRepository) FindByUserPaginatedFiltered(userID, page, limit int, kodeInvoice, metode, tanggal string, minTotal, maxTotal int) ([]domain.Trx, int64, error) {
+	var trxs []domain.Trx
+	var total int64
+
+	db := r.db.Model(&domain.Trx{}).Where("id_user = ?", userID)
+
+	if kodeInvoice != "" {
+		db = db.Where("kode_invoice LIKE ?", "%"+kodeInvoice+"%")
+	}
+	if metode != "" {
+		db = db.Where("method_bayar LIKE ?", "%"+metode+"%")
+	}
+	if tanggal != "" {
+		db = db.Where("DATE(created_at) = ?", tanggal)
+	}
+	if minTotal > 0 {
+		db = db.Where("harga_total >= ?", minTotal)
+	}
+	if maxTotal > 0 {
+		db = db.Where("harga_total <= ?", maxTotal)
+	}
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := db.Order("created_at desc").Limit(limit).Offset(offset).Find(&trxs).Error
+	return trxs, total, err
+}

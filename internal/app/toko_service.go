@@ -39,3 +39,7 @@ func (s *TokoService) UpdateToko(userID int, update *domain.Toko) error {
 	toko.UrlFoto = update.UrlFoto
 	return s.repo.Update(toko)
 }
+
+func (s *TokoService) GetAllTokoPaginatedFiltered(page, limit int, nama, urlFoto string, userID int) ([]domain.Toko, int64, error) {
+	return s.repo.FindAllPaginatedFiltered(page, limit, nama, urlFoto, userID)
+}

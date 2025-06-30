@@ -46,6 +46,9 @@ func main() {
     catRepo := repository.NewCategoryRepository(db)
     catService := app.NewCategoryService(catRepo)
     catHandler := handler.NewCategoryHandler(catService)
+    fotoProdukRepo := repository.NewFotoProdukRepository(db)
+    fotoProdukService := app.NewFotoProdukService(fotoProdukRepo)
+    fotoProdukHandler := handler.NewFotoProdukHandler(fotoProdukService)
     produkRepo := repository.NewProdukRepository(db)
     produkService := app.NewProdukService(produkRepo)
     produkHandler := handler.NewProdukHandler(produkService)
@@ -53,7 +56,7 @@ func main() {
     logProdukService := app.NewLogProdukService(logProdukRepo)
     logProdukHandler := handler.NewLogProdukHandler(logProdukService)
     trxRepo := repository.NewTrxRepository(db)
-    trxService := app.NewTrxService(trxRepo)
+    trxService := app.NewTrxService(trxRepo, alamatRepo)
     trxHandler := handler.NewTrxHandler(trxService)
 
     // Inisialisasi router
@@ -64,16 +67,26 @@ func main() {
     r.HandleFunc("/login", userHandler.Login).Methods("POST")
     r.HandleFunc("/toko/me", tokoHandler.GetMyToko).Methods("GET")
     r.HandleFunc("/toko/me", tokoHandler.UpdateMyToko).Methods("PUT")
+    r.HandleFunc("/toko", tokoHandler.GetAllPaginatedFiltered).Methods("GET")
 
     r.HandleFunc("/alamat", alamatHandler.Create).Methods("POST")
     r.HandleFunc("/alamat", alamatHandler.GetAll).Methods("GET")
     r.HandleFunc("/alamat/{id}", alamatHandler.Update).Methods("PUT")
     r.HandleFunc("/alamat/{id}", alamatHandler.Delete).Methods("DELETE")
+    r.HandleFunc("/alamat", alamatHandler.GetAllPaginatedFiltered).Methods("GET")
 
     r.HandleFunc("/category", catHandler.Create).Methods("POST")         // admin only
     r.HandleFunc("/category/{id}", catHandler.Update).Methods("PUT")     // admin only
     r.HandleFunc("/category/{id}", catHandler.Delete).Methods("DELETE")  // admin only
     r.HandleFunc("/category", catHandler.GetAll).Methods("GET")          // public
+    r.HandleFunc("/category", catHandler.GetAllPaginatedFiltered).Methods("GET")
+
+    r.HandleFunc("/foto_produk", fotoProdukHandler.Create).Methods("POST")
+    r.HandleFunc("/foto_produk/{id}", fotoProdukHandler.GetByID).Methods("GET")
+    r.HandleFunc("/produk/{id_produk}/foto", fotoProdukHandler.GetAllByProduk).Methods("GET")
+    r.HandleFunc("/foto_produk/upload", fotoProdukHandler.Upload).Methods("POST")
+    r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads/"))))
+    r.HandleFunc("/produk/{id_produk}/foto_paginated", fotoProdukHandler.GetAllByProdukPaginatedFiltered).Methods("GET")
 
     r.HandleFunc("/produk", produkHandler.Create).Methods("POST")
     r.HandleFunc("/produk", produkHandler.GetAll).Methods("GET")
@@ -81,18 +94,21 @@ func main() {
     r.HandleFunc("/produk/{id}", produkHandler.Delete).Methods("DELETE")
     r.HandleFunc("/produk/{id}", produkHandler.GetByID).Methods("GET")
     r.HandleFunc("/produk/toko/{id_toko}", produkHandler.GetByToko).Methods("GET")
+    r.HandleFunc("/produk", produkHandler.GetAllPaginated).Methods("GET")
 
     r.HandleFunc("/log_produk", logProdukHandler.Create).Methods("POST")
     r.HandleFunc("/log_produk", logProdukHandler.GetAll).Methods("GET")
     r.HandleFunc("/log_produk/{id}", logProdukHandler.GetByID).Methods("GET")
+    r.HandleFunc("/log_produk", logProdukHandler.GetAllPaginatedFiltered).Methods("GET")
 
     r.HandleFunc("/trx", trxHandler.Create).Methods("POST")
     r.HandleFunc("/trx", trxHandler.GetAll).Methods("GET")
     r.HandleFunc("/trx/{id}", trxHandler.GetByID).Methods("GET")
+    r.HandleFunc("/trx", trxHandler.GetAllPaginatedFiltered).Methods("GET")
 
     // Endpoint dengan middleware JWT (protected)
     api := r.PathPrefix("/api").Subrouter()
-    api.Use(middleware.JWTAuth) // pasang middleware JWT di subrouter ini
+    api.Use(middleware.JWTAuth)
 
     // Contoh endpoint protected
     api.HandleFunc("/profile", userHandler.Profile).Methods("GET")

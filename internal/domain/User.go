@@ -12,7 +12,7 @@ type User struct {
     JenisKelamin  string    `json:"jenis_kelamin"`
     TempatTinggal string    `json:"tempat_tinggal"`
     Pekerjaan     string    `json:"pekerjaan"`
-    Email         string    `json:"email"`
+    Email         string    `gorm:"unique" json:"email"`
     IdProvinsi    string    `json:"id_provinsi"`
     IdKota        string    `json:"id_kota"`
     IsAdmin       *bool     `json:"is_admin"`

@@ -110,3 +110,31 @@ func (h *CategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(cats)
 }
+
+// GET /category?page=1&limit=10&nama=kopi
+func (h *CategoryHandler) GetAllPaginatedFiltered(w http.ResponseWriter, r *http.Request) {
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page < 1 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit < 1 {
+		limit = 10
+	}
+	nama := r.URL.Query().Get("nama")
+
+	cats, total, err := h.service.GetAllCategoryPaginatedFiltered(page, limit, nama)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":        cats,
+		"page":        page,
+		"limit":       limit,
+		"total":       total,
+		"total_pages": totalPages,
+	})
+}

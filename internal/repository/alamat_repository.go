@@ -36,3 +36,25 @@ func (r *AlamatRepository) FindAllByUser(userID int) ([]domain.Alamat, error) {
 	err := r.db.Where("id_user = ?", userID).Find(&alamat).Error
 	return alamat, err
 }
+
+func (r *AlamatRepository) FindAllByUserPaginatedFiltered(userID, page, limit int, nama, judul string) ([]domain.Alamat, int64, error) {
+	var alamat []domain.Alamat
+	var total int64
+
+	db := r.db.Model(&domain.Alamat{}).Where("id_user = ?", userID)
+	if nama != "" {
+		db = db.Where("nama_penerima LIKE ?", "%"+nama+"%")
+	}
+	if judul != "" {
+		db = db.Where("judul_alamat LIKE ?", "%"+judul+"%")
+	}
+
+	// Hitung total sesuai filter
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := db.Limit(limit).Offset(offset).Find(&alamat).Error
+	return alamat, total, err
+}

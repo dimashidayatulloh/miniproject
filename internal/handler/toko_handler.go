@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/dimashidayatulloh/miniproject/internal/app"
@@ -78,4 +79,36 @@ func (h *TokoHandler) UpdateMyToko(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *TokoHandler) GetAllPaginatedFiltered(w http.ResponseWriter, r *http.Request) {
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page < 1 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit < 1 {
+		limit = 10
+	}
+	nama := r.URL.Query().Get("nama")
+	urlFoto := r.URL.Query().Get("url_foto")
+	userID := 0
+	if s := r.URL.Query().Get("id_user"); s != "" {
+		userID, _ = strconv.Atoi(s)
+	}
+
+	tokos, total, err := h.service.GetAllTokoPaginatedFiltered(page, limit, nama, urlFoto, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":        tokos,
+		"page":        page,
+		"limit":       limit,
+		"total":       total,
+		"total_pages": totalPages,
+	})
 }

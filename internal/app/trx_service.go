@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
@@ -9,11 +10,12 @@ import (
 )
 
 type TrxService struct {
-	repo *repository.TrxRepository
+	repo         *repository.TrxRepository
+	alamatRepo   *repository.AlamatRepository // Tambahkan dependency repository alamat
 }
 
-func NewTrxService(repo *repository.TrxRepository) *TrxService {
-	return &TrxService{repo}
+func NewTrxService(repo *repository.TrxRepository, alamatRepo *repository.AlamatRepository) *TrxService {
+	return &TrxService{repo, alamatRepo}
 }
 
 type TrxInput struct {
@@ -31,6 +33,12 @@ type DetailTrxInput struct {
 }
 
 func (s *TrxService) CreateTrx(userID int, input *TrxInput) error {
+	// Validasi: pastikan alamat milik user
+	alamat, err := s.alamatRepo.FindByID(input.AlamatPengiriman, userID)
+	if err != nil || alamat == nil {
+		return errors.New("alamat pengiriman tidak ditemukan")
+	}
+
 	trx := &domain.Trx{
 		IdUser:           userID,
 		AlamatPengiriman: input.AlamatPengiriman,
@@ -72,4 +80,12 @@ func generateInvoiceCode() string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return "INV-" + string(b)
+}
+
+func (s *TrxService) GetAllTrxPaginatedFiltered(
+	userID, page, limit int,
+	kodeInvoice, metode, tanggal string,
+	minTotal, maxTotal int,
+) ([]domain.Trx, int64, error) {
+	return s.repo.FindByUserPaginatedFiltered(userID, page, limit, kodeInvoice, metode, tanggal, minTotal, maxTotal)
 }

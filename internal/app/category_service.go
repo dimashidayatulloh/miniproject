@@ -48,3 +48,7 @@ func (s *CategoryService) GetAllCategory() ([]domain.Category, error) {
 func (s *CategoryService) GetCategoryByID(id int) (*domain.Category, error) {
 	return s.repo.FindByID(id)
 }
+
+func (s *CategoryService) GetAllCategoryPaginatedFiltered(page, limit int, nama string) ([]domain.Category, int64, error) {
+	return s.repo.FindAllPaginatedFiltered(page, limit, nama)
+}

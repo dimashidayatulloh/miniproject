@@ -55,3 +55,37 @@ func (h *LogProdukHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(logs)
 }
+
+func (h *LogProdukHandler) GetAllPaginatedFiltered(w http.ResponseWriter, r *http.Request) {
+	// Ambil query param
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page < 1 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit < 1 {
+		limit = 10
+	}
+	jenis := r.URL.Query().Get("jenis")
+	keterangan := r.URL.Query().Get("keterangan")
+	idProdukStr := r.URL.Query().Get("id_produk")
+	idProduk := 0
+	if idProdukStr != "" {
+		idProduk, _ = strconv.Atoi(idProdukStr)
+	}
+
+	logs, total, err := h.service.GetAllLogProdukPaginatedFiltered(page, limit, jenis, keterangan, idProduk)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":        logs,
+		"page":        page,
+		"limit":       limit,
+		"total":       total,
+		"total_pages": totalPages,
+	})
+}

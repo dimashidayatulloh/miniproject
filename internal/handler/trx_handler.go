@@ -72,3 +72,43 @@ func (h *TrxHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		"detail": detail,
 	})
 }
+
+func (h *TrxHandler) GetAllPaginatedFiltered(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getUserIDFromJWT(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	page := 1
+	limit := 10
+	if p := r.URL.Query().Get("page"); p != "" {
+		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
+			page = parsed
+		}
+	}
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 {
+			limit = parsed
+		}
+	}
+	kodeInvoice := r.URL.Query().Get("kode_invoice")
+	metode := r.URL.Query().Get("method_bayar")
+	tanggal := r.URL.Query().Get("tanggal") // format YYYY-MM-DD
+	minTotal, _ := strconv.Atoi(r.URL.Query().Get("min_total"))
+	maxTotal, _ := strconv.Atoi(r.URL.Query().Get("max_total"))
+
+	trxs, total, err := h.service.GetAllTrxPaginatedFiltered(userID, page, limit, kodeInvoice, metode, tanggal, minTotal, maxTotal)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":        trxs,
+		"page":        page,
+		"limit":       limit,
+		"total":       total,
+		"total_pages": totalPages,
+	})
+}

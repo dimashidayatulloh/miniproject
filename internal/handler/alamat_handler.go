@@ -116,3 +116,36 @@ func getUserIDFromJWT(r *http.Request) (int, bool) {
 	}
 	return claims.UserID, true
 }
+
+func (h *AlamatHandler) GetAllPaginatedFiltered(w http.ResponseWriter, r *http.Request) {
+	userID, ok := getUserIDFromJWT(r)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page < 1 {
+		page = 1
+	}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit < 1 {
+		limit = 10
+	}
+	nama := r.URL.Query().Get("nama")   // filter by nama_penerima
+	judul := r.URL.Query().Get("judul") // filter by judul_alamat
+
+	alamat, total, err := h.service.GetAllAlamatByUserPaginatedFiltered(userID, page, limit, nama, judul)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"data":        alamat,
+		"page":        page,
+		"limit":       limit,
+		"total":       total,
+		"total_pages": totalPages,
+	})
+}

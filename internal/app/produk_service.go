@@ -49,3 +49,11 @@ func (s *ProdukService) GetAllProduk() ([]domain.Produk, error) {
 func (s *ProdukService) GetProdukByToko(idToko int) ([]domain.Produk, error) {
 	return s.repo.FindByToko(idToko)
 }
+
+func (s *ProdukService) GetAllProdukPaginated(page int, limit int) ([]domain.Produk, int64, error) {
+	return s.repo.FindAllPaginated(page, limit)
+}
+
+func (s *ProdukService) GetAllProdukFiltered(page, limit int, nama, kategori string, hargaMin, hargaMax int) ([]domain.Produk, int64, error) {
+    return s.repo.FindAllFiltered(page, limit, nama, kategori, hargaMin, hargaMax)
+}
