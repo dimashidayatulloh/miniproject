@@ -15,3 +15,7 @@ type Produk struct {
     IdToko        int        `json:"id_toko"`
     IdCategory    int        `json:"id_category"`
 }
+
+func (Produk) TableName() string {
+    return "produk"
+}

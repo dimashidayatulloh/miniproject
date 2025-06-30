@@ -9,11 +9,13 @@ import (
 )
 
 type UserService struct {
-	repo *repository.UserRepository
+	repo     *repository.UserRepository
+	tokoRepo *repository.TokoRepository
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
-	return &UserService{repo}
+// Inject TokoRepository saat inisialisasi
+func NewUserService(repo *repository.UserRepository, tokoRepo *repository.TokoRepository) *UserService {
+	return &UserService{repo: repo, tokoRepo: tokoRepo}
 }
 
 func (s *UserService) Register(user *domain.User) error {
@@ -23,18 +25,29 @@ func (s *UserService) Register(user *domain.User) error {
 		return err
 	}
 	user.KataSandi = string(hashed)
-	return s.repo.Create(user)
+	err = s.repo.Create(user)
+	if err != nil {
+		return err
+	}
+
+	// Buat toko otomatis setelah user berhasil register
+	toko := &domain.Toko{
+		IdUser:   user.ID,
+		NamaToko: "Toko " + user.Nama,
+		UrlFoto:  "",
+	}
+	return s.tokoRepo.Create(toko)
 }
 
 func (s *UserService) Login(email, password string) (*domain.User, error) {
-    user, err := s.repo.FindByEmail(email)
-    if err != nil {
-        return nil, errors.New("email tidak ditemukan")
-    }
-    if err := bcrypt.CompareHashAndPassword([]byte(user.KataSandi), []byte(password)); err != nil {
-        return nil, errors.New("password salah")
-    }
-    return user, nil
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		return nil, errors.New("email tidak ditemukan")
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.KataSandi), []byte(password)); err != nil {
+		return nil, errors.New("password salah")
+	}
+	return user, nil
 }
 
 func (s *UserService) GetByID(id int) (*domain.User, error) {

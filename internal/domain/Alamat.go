@@ -12,3 +12,7 @@ type Alamat struct {
     UpdatedAt    *time.Time
     CreatedAt    *time.Time
 }
+
+func (Alamat) TableName() string {
+    return "alamat"
+}

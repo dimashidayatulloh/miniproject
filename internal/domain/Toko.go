@@ -10,3 +10,7 @@ type Toko struct {
     UpdatedAt  *time.Time
     CreatedAt  *time.Time
 }
+
+func (Toko) TableName() string {
+    return "toko"
+}

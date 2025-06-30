@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/dimashidayatulloh/miniproject/internal/domain"
 	"gorm.io/gorm"
 )
@@ -20,6 +22,7 @@ func (r *UserRepository) Create(user *domain.User) error {
 func (r *UserRepository) FindByEmail(email string) (*domain.User, error) {
     var user domain.User
     err := r.db.Where("email = ?", email).First(&user).Error
+	fmt.Println("FindByEmail:", email, "err:", err, "user:", user) // Debug
     return &user, err
 }
 

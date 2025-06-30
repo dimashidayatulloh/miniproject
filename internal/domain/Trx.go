@@ -12,3 +12,7 @@ type Trx struct {
     UpdatedAt        *time.Time `json:"updated_at"`
     CreatedAt        *time.Time `json:"created_at"`
 }
+
+func (Trx) TableName() string {
+    return "trx"
+}

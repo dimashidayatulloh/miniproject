@@ -36,7 +36,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email    string `json:"email"`
-		Password string `json:"password"`
+		Password string `json:"kata_sandi"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -48,8 +48,12 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Email atau password salah", http.StatusUnauthorized)
 		return
 	}
+	isAdmin := false
+	if user.IsAdmin != nil && *user.IsAdmin {
+		isAdmin = true
+	}
 
-	token, err := jwt.GenerateJWT(user.ID, user.Email)
+	token, err := jwt.GenerateJWT(user.ID, user.Email, isAdmin)
 	if err != nil {
 		http.Error(w, "Gagal generate token", http.StatusInternalServerError)
 		return

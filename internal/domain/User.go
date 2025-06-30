@@ -15,7 +15,11 @@ type User struct {
     Email         string    `json:"email"`
     IdProvinsi    string    `json:"id_provinsi"`
     IdKota        string    `json:"id_kota"`
-    IsAdmin       *bool     `json:"isAdmin"`
+    IsAdmin       *bool     `json:"is_admin"`
     UpdatedAt     *time.Time `json:"updated_at"`
     CreatedAt     *time.Time `json:"created_at"`
+}
+
+func (User) TableName() string {
+    return "user"
 }
